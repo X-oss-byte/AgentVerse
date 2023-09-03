@@ -27,9 +27,9 @@ class NlpClassroom9PlayersParser(OutputParser):
         if action == "Speak":
             return AgentFinish({"output": action_input}, text)
         elif action == "CallOn":
-            return AgentFinish({"output": "[CallOn] " + action_input}, text)
+            return AgentFinish({"output": f"[CallOn] {action_input}"}, text)
         elif action == "RaiseHand":
-            return AgentFinish({"output": "[RaiseHand] " + action_input}, text)
+            return AgentFinish({"output": f"[RaiseHand] {action_input}"}, text)
         elif action == "Listen":
             return AgentFinish({"output": ""}, text)
         else:

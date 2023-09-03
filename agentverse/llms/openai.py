@@ -59,7 +59,7 @@ class OpenAICompletion(BaseCompletionModel):
         args = args.dict()
         for k, v in args.items():
             args[k] = kwargs.pop(k, v)
-        if len(kwargs) > 0:
+        if kwargs:
             logging.warning(f"Unused arguments: {kwargs}")
         super().__init__(args=args, max_retry=max_retry)
 
@@ -93,7 +93,7 @@ class OpenAIChat(BaseChatModel):
 
         for k, v in args.items():
             args[k] = kwargs.pop(k, v)
-        if len(kwargs) > 0:
+        if kwargs:
             logging.warning(f"Unused arguments: {kwargs}")
         super().__init__(args=args, max_retry=max_retry)
 

@@ -18,7 +18,7 @@ class PokemonDescriber(BaseDescriber):
         player_content: str = "",
     ) -> List[str]:
         time = environment.time
-        if player_content == "":
+        if not player_content:
             agent_to_location = environment.get_agent_to_location()
             descriptions = []
             for agent in environment.agents:
@@ -32,7 +32,7 @@ class PokemonDescriber(BaseDescriber):
                 agents_in_same_loc.remove(agent.name)
                 agents_in_same_loc = list(agents_in_same_loc)
                 description += f"It is now {time}. You are at {location}."
-                if len(agents_in_same_loc) == 0:
+                if not agents_in_same_loc:
                     description += " There is no one else here."
                 elif len(agents_in_same_loc) == 1:
                     description += f" {agents_in_same_loc[0]} is also here."

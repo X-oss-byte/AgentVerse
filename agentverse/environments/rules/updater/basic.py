@@ -53,7 +53,6 @@ class BasicUpdater(BaseUpdater):
             # If receiver is all, then add the message to all agents
             for agent in agents:
                 agent.add_message_to_memory([message])
-            return True
         else:
             # If receiver is not all, then add the message to the specified agents
             receiver_set = message.receiver
@@ -63,7 +62,6 @@ class BasicUpdater(BaseUpdater):
                     receiver_set.remove(agent.name)
             if len(receiver_set) > 0:
                 missing_receiver = ", ".join(list(receiver_set))
-                raise ValueError(
-                    "Receiver {} not found. Message discarded".format(missing_receiver)
-                )
-            return True
+                raise ValueError(f"Receiver {missing_receiver} not found. Message discarded")
+
+        return True

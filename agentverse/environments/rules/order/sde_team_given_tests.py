@@ -32,4 +32,4 @@ class SdeTeamGivenTestsOrder(BaseOrder):
             self.next_agent_idx = 0
             return [2]
         else:
-            raise ValueError("Invalid next_agent_idx: {}".format(self.next_agent_idx))
+            raise ValueError(f"Invalid next_agent_idx: {self.next_agent_idx}")

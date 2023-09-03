@@ -16,8 +16,7 @@ def get_output(func: str, assert_statement: str) -> str:
         func_call = get_call_str(assert_statement)
         try:
             exec(func, globals())
-            output = eval(func_call)
-            return output
+            return eval(func_call)
         except Exception as e:
             return str(e)
     except:

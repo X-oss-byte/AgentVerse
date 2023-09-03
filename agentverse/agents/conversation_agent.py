@@ -17,7 +17,7 @@ class ConversationAgent(BaseAgent):
         prompt = self._fill_prompt_template(env_description)
 
         parsed_response = None
-        for i in range(self.max_retry):
+        for _ in range(self.max_retry):
             try:
                 response = self.llm.generate_response(prompt)
                 parsed_response = self.output_parser.parse(response)
@@ -27,26 +27,23 @@ class ConversationAgent(BaseAgent):
             except Exception as e:
                 logging.error(e)
                 logging.warning("Retrying...")
-                continue
-
         if parsed_response is None:
             logging.error(f"{self.name} failed to generate valid response.")
 
-        message = Message(
+        return Message(
             content=""
             if parsed_response is None
             else parsed_response.return_values["output"],
             sender=self.name,
             receiver=self.get_receiver(),
         )
-        return message
 
     async def astep(self, env_description: str = "") -> Message:
         """Asynchronous version of step"""
         prompt = self._fill_prompt_template(env_description)
 
         parsed_response = None
-        for i in range(self.max_retry):
+        for _ in range(self.max_retry):
             try:
                 response = await self.llm.agenerate_response(prompt)
                 parsed_response = self.output_parser.parse(response)
@@ -56,19 +53,16 @@ class ConversationAgent(BaseAgent):
             except Exception as e:
                 logging.error(e)
                 logging.warning("Retrying...")
-                continue
-
         if parsed_response is None:
             logging.error(f"{self.name} failed to generate valid response.")
 
-        message = Message(
+        return Message(
             content=""
             if parsed_response is None
             else parsed_response.return_values["output"],
             sender=self.name,
             receiver=self.get_receiver(),
         )
-        return message
 
     def _fill_prompt_template(self, env_description: str = "") -> str:
         """Fill the placeholders in the prompt template

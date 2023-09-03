@@ -114,14 +114,4 @@ class SdeTeamGivenTestsEnvironment(BaseEnvironment):
 
     def is_done(self) -> bool:
         """Check if the environment is done"""
-        if self.cnt_turn >= self.max_turns or self.rule_params["end_flag"]:
-            # # Write to file for experiment
-            # with open(f"human_eval_experiments/{self.experiment_name}/record_human_eval_prediction.jsonl", "a") as f:
-            #     wd = dict()
-            #     wd['task_id'] = self.task_name
-            #     wd['code'] = self.rule_params['code']
-            #     # print(wd)
-            #     f.write(json.dumps(wd) + "\n")
-            # logging.getLogger().handlers.pop()
-            return True
-        return False
+        return bool(self.cnt_turn >= self.max_turns or self.rule_params["end_flag"])

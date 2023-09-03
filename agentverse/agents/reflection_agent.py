@@ -58,14 +58,15 @@ class ReflectionAgent(BaseAgent):
         prompt = self._fill_prompt_template(env_description)
 
         parsed_response, reaction, target = None, None, None
-        for i in range(self.max_retry):
+        for _ in range(self.max_retry):
             try:
                 response = self.llm.agenerate_response(prompt)
                 parsed_response = self.output_parser.parse(response)
 
-                if 'say(' in parsed_response.return_values["output"]:
-                    reaction, target = eval("self._" + parsed_response.return_values["output"].strip())
-                elif 'act(' in parsed_response.return_values["output"]:
+                if (
+                    'say(' in parsed_response.return_values["output"]
+                    or 'act(' in parsed_response.return_values["output"]
+                ):
                     reaction, target = eval("self._" + parsed_response.return_values["output"].strip())
                 elif 'do_nothing(' in parsed_response.return_values["output"]:
                     reaction, target = None, None
@@ -77,8 +78,6 @@ class ReflectionAgent(BaseAgent):
             except Exception as e:
                 logger.error(e)
                 logger.warning("Retrying...")
-                continue
-
         if parsed_response is None:
             logger.error(f"{self.name} failed to generate valid response.")
 
@@ -110,14 +109,15 @@ class ReflectionAgent(BaseAgent):
         prompt = self._fill_prompt_template(env_description)
 
         parsed_response, reaction, target = None, None, None
-        for i in range(self.max_retry):
+        for _ in range(self.max_retry):
             try:
                 response = await self.llm.agenerate_response(prompt)
                 parsed_response = self.output_parser.parse(response)
 
-                if 'say(' in parsed_response.return_values["output"]:
-                    reaction, target = eval("self._" + parsed_response.return_values["output"].strip())
-                elif 'act(' in parsed_response.return_values["output"]:
+                if (
+                    'say(' in parsed_response.return_values["output"]
+                    or 'act(' in parsed_response.return_values["output"]
+                ):
                     reaction, target = eval("self._" + parsed_response.return_values["output"].strip())
                 elif 'do_nothing(' in parsed_response.return_values["output"]:
                     reaction, target = None, None
@@ -130,8 +130,6 @@ class ReflectionAgent(BaseAgent):
             except Exception as e:
                 logger.error(e)
                 logger.warning("Retrying...")
-                continue
-
         if parsed_response is None:
             logger.error(f"{self.name} failed to generate valid response.")
 
@@ -172,14 +170,8 @@ class ReflectionAgent(BaseAgent):
 
     def get_valid_receiver(self, target: str) -> set():
 
-        all_agents_name = []
-        for agent in self.environment.agents:
-            all_agents_name.append(agent.name)
-
-        if not (target in all_agents_name):
-            return {"all"}
-        else:
-            return {target}
+        all_agents_name = [agent.name for agent in self.environment.agents]
+        return {"all"} if target not in all_agents_name else {target}
 
     def _fill_prompt_template(self, env_description: str = "") -> str:
         """Fill the placeholders in the prompt template

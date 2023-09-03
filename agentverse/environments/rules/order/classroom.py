@@ -32,35 +32,31 @@ class ClassroomOrder(BaseOrder):
             return self.get_next_agent_idx_ungrouped(environment)
 
     def get_next_agent_idx_ungrouped(self, environment: BaseEnvironment) -> List[int]:
-        if len(environment.last_messages) == 0:
+        if (
+            len(environment.last_messages) == 0
+            or len(environment.last_messages) != 1
+        ):
             # If the class just begins or no one speaks in the last turn, we let only the professor speak
             return [0]
-        elif len(environment.last_messages) == 1:
-            message = environment.last_messages[0]
-            sender = message.sender
-            content = message.content
-            if sender.startswith("Professor"):
-                if content.startswith("[CallOn]"):
-                    # 1. professor calls on someone, then the student should speak
-                    result = re.search(r"\[CallOn\] Yes, ([sS]tudent )?(\w+)", content)
-                    if result is not None:
-                        name_to_id = {
-                            agent.name[len("Student ") :]: i
-                            for i, agent in enumerate(environment.agents)
-                        }
-                        return [name_to_id[result.group(2)]]
-                else:
-                    # 2. professor normally speaks, then anyone can act
-                    return list(range(len(environment.agents)))
-            elif sender.startswith("Student"):
-                # 3. student ask question after being called on, or
-                # 4. only one student raises hand, and the professor happens to listen
-                # 5. the group discussion is just over, and there happens to be only a student speaking in the last turn
-                return [0]
-        else:
-            # If len(last_messages) > 1, then
-            # 1. there must be at least one student raises hand or speaks.
-            # 2. the group discussion is just over.
+        message = environment.last_messages[0]
+        sender = message.sender
+        content = message.content
+        if sender.startswith("Professor"):
+            if not content.startswith("[CallOn]"):
+                # 2. professor normally speaks, then anyone can act
+                return list(range(len(environment.agents)))
+            # 1. professor calls on someone, then the student should speak
+            result = re.search(r"\[CallOn\] Yes, ([sS]tudent )?(\w+)", content)
+            if result is not None:
+                name_to_id = {
+                    agent.name[len("Student ") :]: i
+                    for i, agent in enumerate(environment.agents)
+                }
+                return [name_to_id[result.group(2)]]
+        elif sender.startswith("Student"):
+            # 3. student ask question after being called on, or
+            # 4. only one student raises hand, and the professor happens to listen
+            # 5. the group discussion is just over, and there happens to be only a student speaking in the last turn
             return [0]
         assert (
             False
