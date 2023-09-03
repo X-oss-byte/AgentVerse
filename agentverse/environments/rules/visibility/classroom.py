@@ -41,38 +41,39 @@ class ClassroomVisibility(BaseVisibility):
             environment.rule_params["groups"] = self.group_students(environment)
             # Update the receiver for each agent
             self.update_receiver(environment)
-        else:
-            # If now in grouping mode, then we check if the group discussion is over
-            if environment.rule_params.get("is_grouped", False):
-                self.current_turn += 1
-                if self.current_turn >= self.num_discussion_turn:
-                    self.reset()
-                    environment.rule_params["is_grouped"] = False
-                    environment.rule_params["is_grouped_ended"] = True
-                    self.update_receiver(environment, reset=True)
+        elif environment.rule_params.get("is_grouped", False):
+            self.current_turn += 1
+            if self.current_turn >= self.num_discussion_turn:
+                self.reset()
+                environment.rule_params["is_grouped"] = False
+                environment.rule_params["is_grouped_ended"] = True
+                self.update_receiver(environment, reset=True)
 
     def group_students(self, environment: BaseEnvironment) -> List[List[int]]:
-        if isinstance(self.grouping, str):
-            student_index = list(range(1, len(environment.agents)))
-            result = []
-            if self.grouping == "random":
-                random.shuffle(student_index)
-                for i in range(0, len(student_index), self.student_per_group):
-                    result.append(student_index[i : i + self.student_per_group])
-            elif self.grouping == "sequential":
-                for i in range(0, len(student_index), self.student_per_group):
-                    result.append(student_index[i : i + self.student_per_group])
-            else:
-                raise ValueError(f"Unsupported grouping method {self.grouping}")
-            return result
-        else:
+        if not isinstance(self.grouping, str):
             # If the grouping information is provided, then we use it directly
             return self.grouping
+        student_index = list(range(1, len(environment.agents)))
+        result = []
+        if self.grouping == "random":
+            random.shuffle(student_index)
+            result.extend(
+                student_index[i : i + self.student_per_group]
+                for i in range(0, len(student_index), self.student_per_group)
+            )
+        elif self.grouping == "sequential":
+            result.extend(
+                student_index[i : i + self.student_per_group]
+                for i in range(0, len(student_index), self.student_per_group)
+            )
+        else:
+            raise ValueError(f"Unsupported grouping method {self.grouping}")
+        return result
 
     def update_receiver(self, environment: BaseEnvironment, reset=False):
         if reset:
             for agent in environment.agents:
-                agent.set_receiver(set({"all"}))
+                agent.set_receiver({"all"})
         else:
             groups = environment.rule_params["groups"]
             for group in groups:

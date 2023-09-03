@@ -27,22 +27,19 @@ class PrisonerOrder(BaseOrder):
     switch_func: dict = {1: 2, 2: 1}
 
     def get_next_agent_idx(self, environment: BaseEnvironment) -> List[int]:
-        if len(environment.last_messages) == 0:
+        if (
+            len(environment.last_messages) == 0
+            or len(environment.last_messages) != 1
+        ):
             # If the game just begins or , we let only the police speak
             return [0]
-        elif len(environment.last_messages) == 1:
-            message = environment.last_messages[0]
-            sender = message.sender
-            content = message.content
-            if sender.startswith("Police"):
-                next_prisoner = self.last_prisoner_index
-                self.last_prisoner_index = self.switch_func[self.last_prisoner_index]
-                return [next_prisoner]
-            elif sender.startswith("Suspect"):
-                # 3. when one prisoner made his action, let the police tell another prisoner
-                return [0]
-        else:
-            # If len(last_messages) > 1, then
-            # 1. there must be at least one student raises hand or speaks.
-            # 2. the group discussion is just over.
+        message = environment.last_messages[0]
+        sender = message.sender
+        content = message.content
+        if sender.startswith("Police"):
+            next_prisoner = self.last_prisoner_index
+            self.last_prisoner_index = self.switch_func[self.last_prisoner_index]
+            return [next_prisoner]
+        elif sender.startswith("Suspect"):
+            # 3. when one prisoner made his action, let the police tell another prisoner
             return [0]

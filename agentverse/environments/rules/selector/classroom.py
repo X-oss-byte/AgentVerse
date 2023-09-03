@@ -38,10 +38,11 @@ class ClassroomSelector(BaseSelector):
             and selected[0].sender.startswith("Professor")
             and selected[0].content != ""
         ):
-            filtered_selected = []
-            filtered_selected.append(selected[0])
-            for message in selected[1:]:
-                if message.content.startswith("[RaiseHand]"):
-                    filtered_selected.append(message)
+            filtered_selected = [selected[0]]
+            filtered_selected.extend(
+                message
+                for message in selected[1:]
+                if message.content.startswith("[RaiseHand]")
+            )
             selected = filtered_selected
         return selected

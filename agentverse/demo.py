@@ -161,11 +161,9 @@ class UI:
         else:
             background = cv2.imread("./imgs/background.png")
             back_h, back_w, _ = background.shape
-            stu_cnt = 0
-            for h_begin, w_begin in itertools.product(
+            for stu_cnt, (h_begin, w_begin) in enumerate(itertools.product(
                     range(800, back_h, 300), range(135, back_w - 200, 200)
-            ):
-                stu_cnt += 1
+            ), start=1):
                 img = cv2.imread(
                     f"./imgs/{(stu_cnt - 1) % 11 + 1 if stu_cnt <= self.stu_num else 'empty'}.png",
                     cv2.IMREAD_UNCHANGED,
@@ -262,27 +260,29 @@ class UI:
         _format = [{"message": "", "sender": idx} for idx in range(len(self.agent_id))]
 
         for message in messages:
-            if self.task == "db_diag":
+            if (
+                self.task != "db_diag"
+                and "sde" in self.task
+                and message.sender == "code_tester"
+            ):
+                pre_message, message_ = message.content.split("\n")
+                message_ = f'{pre_message}\n{json.loads(message_)["feedback"]}'
+                _format[self.agent_id[message.sender]][
+                    "message"
+                ] = f"[{message.sender}]: {message_}"
+            elif (
+                self.task != "db_diag"
+                and "sde" in self.task
+                or self.task != "db_diag"
+            ):
+                _format[self.agent_id[message.sender]][
+                    "message"
+                ] = f"[{message.sender}]: {message.content}"
+
+            else:
                 content_json: dict = message.content
                 content_json["diagnose"] = f"[{message.sender}]: {content_json['diagnose']}"
                 _format[self.agent_id[message.sender]]["message"] = json.dumps(content_json)
-            elif "sde" in self.task:
-                if message.sender == "code_tester":
-                    pre_message, message_ = message.content.split("\n")
-                    message_ = "{}\n{}".format(pre_message, json.loads(message_)["feedback"])
-                    _format[self.agent_id[message.sender]]["message"] = "[{}]: {}".format(
-                        message.sender, message_
-                    )
-                else:
-                    _format[self.agent_id[message.sender]]["message"] = "[{}]: {}".format(
-                        message.sender, message.content
-                    )
-
-            else:
-                _format[self.agent_id[message.sender]]["message"] = "[{}]: {}".format(
-                    message.sender, message.content
-                )
-
         return _format
 
     def gen_output(self):
@@ -309,19 +309,18 @@ class UI:
         return [self.gen_img(data), message]
 
     def gen_message(self):
-        # If the backend cannot handle this error, use the following code.
-        message = ""
         """
         for item in data:
             if item["message"] not in ["", "[RaiseHand]"]:
                 message = item["message"]
                 break
         """
+        message = ""
         for sender, msg in self.messages:
-            if sender == 0:
-                avatar = self.get_avatar(0)
-            elif sender == -1:
+            if sender == -1:
                 avatar = self.get_avatar(-1)
+            elif sender == 0:
+                avatar = self.get_avatar(0)
             else:
                 avatar = self.get_avatar((sender - 1) % 11 + 1)
             if self.task == "db_diag":
@@ -356,15 +355,8 @@ class UI:
             else:
                 msg = msg.replace("<", "&lt;")
                 msg = msg.replace(">", "&gt;")
-            message = (
-                f'<div style="display: flex; align-items: center; margin-bottom: 10px;overflow:auto;">'
-                f'<img src="{avatar}" style="width: 5%; height: 5%; border-radius: 25px; margin-right: 10px;">'
-                f'<div style="background-color: gray; color: white; padding: 10px; border-radius: 10px;'
-                f'max-width: 70%; white-space: pre-wrap">'
-                f"{msg}"
-                f"</div></div>" + message
-            )
-        message = '<div id="divDetail" style="height:600px;overflow:auto;">' + message + "</div>"
+            message = f'<div style="display: flex; align-items: center; margin-bottom: 10px;overflow:auto;"><img src="{avatar}" style="width: 5%; height: 5%; border-radius: 25px; margin-right: 10px;"><div style="background-color: gray; color: white; padding: 10px; border-radius: 10px;max-width: 70%; white-space: pre-wrap">{msg}</div></div>{message}'
+        message = f'<div id="divDetail" style="height:600px;overflow:auto;">{message}</div>'
         return message
 
     def submit(self, message: str):
@@ -414,9 +406,6 @@ class UI:
                 submit_btn = gr.Button("Submit", variant="primary")
 
                 submit_btn.click(fn=self.submit, inputs=user_msg, outputs=[image_output, text_output], show_progress=False)
-            else:
-                pass
-
             # next_btn.click(fn=self.gen_output, inputs=None, outputs=[image_output, text_output], show_progress=False)
             next_btn.click(
                 fn=self.delay_gen_output,

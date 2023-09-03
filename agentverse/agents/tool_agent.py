@@ -35,21 +35,19 @@ class ToolAgent(BaseAgent):
         while True:
             prompt = self._fill_prompt_template(env_description, tool_observation)
 
-            for i in range(self.max_retry):
+            for _ in range(self.max_retry):
                 try:
                     response = self.llm.generate_response(prompt)
                     parsed_response = self.output_parser.parse(response)
                     if isinstance(parsed_response, AgentAction):
                         observation = self._call_tool(parsed_response)
                         tool_observation.append(
-                            parsed_response.log.strip()
-                            + f"\nObservation: {observation.strip()}"
+                            f"{parsed_response.log.strip()}\nObservation: {observation.strip()}"
                         )
                     break
                 except BaseException as e:
                     logging.error(e)
                     logging.warning("Retrying...")
-                    continue
             if parsed_response is None or isinstance(parsed_response, AgentFinish):
                 break
 
@@ -58,14 +56,13 @@ class ToolAgent(BaseAgent):
 
         self._update_tool_memory(tool_observation)
 
-        message = Message(
+        return Message(
             content=""
             if parsed_response is None
             else parsed_response.return_values["output"],
             sender=self.name,
             receiver=self.get_receiver(),
         )
-        return message
 
     async def astep(self, env_description: str = "") -> Message:
         """Asynchronous version of step"""
@@ -75,7 +72,7 @@ class ToolAgent(BaseAgent):
         while True:
             prompt = self._fill_prompt_template(env_description, tool_observation)
 
-            for i in range(self.max_retry):
+            for _ in range(self.max_retry):
                 try:
                     response = await self.llm.agenerate_response(prompt)
                     parsed_response = self.output_parser.parse(response)
@@ -84,14 +81,12 @@ class ToolAgent(BaseAgent):
                         # and append the observation to tool_observation
                         observation = await self._acall_tool(parsed_response)
                         tool_observation.append(
-                            parsed_response.log.strip()
-                            + f"\nObservation: {observation.strip()}"
+                            f"{parsed_response.log.strip()}\nObservation: {observation.strip()}"
                         )
                     break
                 except BaseException as e:
                     logging.error(e)
                     logging.warning("Retrying...")
-                    continue
             if parsed_response is None or isinstance(parsed_response, AgentFinish):
                 break
 
@@ -100,14 +95,13 @@ class ToolAgent(BaseAgent):
 
         self._update_tool_memory(tool_observation)
 
-        message = Message(
+        return Message(
             content=""
             if parsed_response is None
             else parsed_response.return_values["output"],
             sender=self.name,
             receiver=self.get_receiver(),
         )
-        return message
 
     def _call_tool(self, response: NamedTuple) -> str:
         """Call a tool and return the output"""
@@ -115,8 +109,7 @@ class ToolAgent(BaseAgent):
         if response.tool not in name_to_tool:
             raise ToolNotExistError(response.tool)
         tool = name_to_tool[response.tool]
-        observation = tool.run(response.tool_input, verbose=self.verbose)
-        return observation
+        return tool.run(response.tool_input, verbose=self.verbose)
 
     async def _acall_tool(self, response: NamedTuple) -> str:
         """Call a tool and return the output"""
@@ -124,8 +117,7 @@ class ToolAgent(BaseAgent):
         if response.tool not in name_to_tool:
             raise ToolNotExistError(response.tool)
         tool = name_to_tool[response.tool]
-        observation = await tool.arun(response.tool_input, verbose=self.verbose)
-        return observation
+        return await tool.arun(response.tool_input, verbose=self.verbose)
 
     def _update_tool_memory(self, tool_observation: List[str]):
         """Update the memory of the tool"""

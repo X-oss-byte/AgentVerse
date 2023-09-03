@@ -47,7 +47,7 @@ class BaseAgent(BaseModel):
 
     def set_receiver(self, receiver: Union[Set[str], str]) -> None:
         if isinstance(receiver, str):
-            self.receiver = set({receiver})
+            self.receiver = {receiver}
         elif isinstance(receiver, set):
             self.receiver = receiver
         else:

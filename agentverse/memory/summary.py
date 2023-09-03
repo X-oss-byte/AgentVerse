@@ -64,10 +64,7 @@ class SummaryMemory(BaseMemory):
     def update_buffer(self, new_message: str):
         prompt = self._fill_in_prompt_template(new_message)
         response = self.llm.generate_response(prompt)
-        if self.recursive:
-            self.buffer = response.content
-        else:
-            self.buffer = "\n" + response.content
+        self.buffer = response.content if self.recursive else "\n" + response.content
 
     def _fill_in_prompt_template(self, new_lines: str) -> str:
         """Fill in the prompt template with the given arguments.

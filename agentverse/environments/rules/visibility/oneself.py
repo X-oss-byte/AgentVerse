@@ -15,4 +15,4 @@ class OneselfVisibility(BaseVisibility):
 
     def update_visible_agents(self, environment: BaseEnvironment):
         for agent in environment.agents:
-            agent.set_receiver(set({agent.name}))
+            agent.set_receiver({agent.name})

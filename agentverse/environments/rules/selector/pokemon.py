@@ -33,19 +33,16 @@ class PokemonSelector(BaseSelector):
                 continue
             if content["action"] == "Speak":
                 try:
-                    if "to" not in content:
+                    if "to" not in content or content["to"] not in agent_to_idx:
                         # If the model does not generate receiver, then we discard the message
                         valid.append(0)
-                    elif content["to"] in agent_to_idx:
+                    else:
                         # TODO: allow talk to a list of agents
                         valid.append(1)
                         # talk_matrix[i][j] = 1 ==> i talk to j
                         talk_matrix[agent_to_idx[message.sender]][
                             agent_to_idx[content["to"]]
                         ] = 1
-                    else:
-                        # If the receiver is not in the environment, then we discard the message
-                        valid.append(0)
                 except:
                     valid.append(0)
                     continue

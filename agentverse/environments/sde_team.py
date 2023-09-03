@@ -116,11 +116,4 @@ class SdeTeamEnvironment(BaseEnvironment):
 
     def is_done(self) -> bool:
         """Check if the environment is done"""
-        if self.cnt_turn >= self.max_turns or self.rule_params["end_flag"]:
-            # with open("record_human_eval.txt", "a") as f:
-            #     wd = dict()
-            #     wd['task_id'] = self.task_name
-            #     wd['code'] = self.rule_params['code']
-            #     f.write(json.dumps(wd))
-            return True
-        return False
+        return bool(self.cnt_turn >= self.max_turns or self.rule_params["end_flag"])

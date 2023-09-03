@@ -17,12 +17,11 @@ class ClassroomDescriber(BasicDescriber):
 
     def get_env_description(self, environment: BaseEnvironment) -> List[str]:
         if not environment.rule_params.get("is_grouped", False):
-            if environment.rule_params.get("is_grouped_ended", False):
-                # If the group discussion is just ended
-                environment.rule_params["is_grouped_ended"] = False
-                return [self.end_prompt for _ in range(len(environment.agents))]
-            else:
+            if not environment.rule_params.get("is_grouped_ended", False):
                 return super().get_env_description(environment)
+            # If the group discussion is just ended
+            environment.rule_params["is_grouped_ended"] = False
+            return [self.end_prompt for _ in range(len(environment.agents))]
         description = []
         for i, agent in enumerate(environment.agents):
             if i == 0:
